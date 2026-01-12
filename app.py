@@ -179,16 +179,18 @@ def validate_file_path(file_path):
     if not file_abs_path.startswith(upload_dir):
         raise ValueError(f"文件路径不安全: {file_path}")
     
-    # 检查路径中是否包含危险的字符或路径遍历序列
-    dangerous_patterns = ['..', '~', '/', '\\']
-    for pattern in dangerous_patterns:
-        if pattern in file_path:
-            raise ValueError(f"文件路径包含危险字符: {file_path}")
+    # 只检查文件名部分是否安全，而不是整个路径
+    filename = os.path.basename(file_path)
     
     # 检查文件名是否只包含安全字符（数字）
-    filename = os.path.basename(file_path)
     if not filename.isdigit():
         raise ValueError(f"文件名不安全: {filename}")
+    
+    # 检查文件名是否包含危险的字符或路径遍历序列
+    dangerous_patterns = ['..', '~', '/', '\\']
+    for pattern in dangerous_patterns:
+        if pattern in filename:
+            raise ValueError(f"文件路径包含危险字符: {filename}")
     
     return True
 
@@ -201,9 +203,10 @@ def check_expired_files():
     for code, info in file_data.items():
         if current_time > info['expire_time']:
             # 删除文件
-            if os.path.exists(info['file_path']):
+            file_path = os.path.join(UPLOAD_FOLDER, info['filename'])
+            if os.path.exists(file_path):
                 try:
-                    os.remove(info['file_path'])
+                    os.remove(file_path)
                 except:
                     pass
             expired_codes.append(code)
@@ -318,9 +321,10 @@ def delete_file(code):
     file_data = read_file_data()
     if code in file_data:
         # 删除文件
-        if os.path.exists(file_data[code]['file_path']):
+        file_path = os.path.join(UPLOAD_FOLDER, file_data[code]['filename'])
+        if os.path.exists(file_path):
             try:
-                os.remove(file_data[code]['file_path'])
+                os.remove(file_path)
             except:
                 pass
         # 获取原始文件名
@@ -392,6 +396,10 @@ def upload_file():
         
         # 保存文件（使用随机文件名，不包含扩展名）
         file_path = os.path.join(UPLOAD_FOLDER, random_filename)
+        
+        # 验证文件路径安全性
+        validate_file_path(file_path)
+        
         file.save(file_path)
         
         # 计算过期时间
@@ -400,9 +408,8 @@ def upload_file():
         # 保存文件信息
         file_data = read_file_data()
         file_data[code] = {
-            'file_path': file_path,
+            'filename': random_filename,
             'original_filename': file.filename,
-            'random_filename': random_filename,
             'extension': file_extension,
             'upload_time': datetime.now().timestamp(),
             'expire_time': expire_time,
@@ -655,9 +662,10 @@ def verify_code():
         current_time = datetime.now().timestamp()
         if current_time > file_data[code]['expire_time']:
             # 删除过期文件
-            if os.path.exists(file_data[code]['file_path']):
+            file_path = os.path.join(UPLOAD_FOLDER, file_data[code]['filename'])
+            if os.path.exists(file_path):
                 try:
-                    os.remove(file_data[code]['file_path'])
+                    os.remove(file_path)
                 except:
                     pass
             del file_data[code]
@@ -695,13 +703,17 @@ def download_file():
     file_data = read_file_data()
     
     if new_code in file_data:
-        file_path = file_data[new_code]['file_path']
+        filename = file_data[new_code]['filename']
         original_filename = file_data[new_code]['original_filename']
+        file_path = os.path.join(UPLOAD_FOLDER, filename)
         
         # 检查文件是否存在
         if os.path.exists(file_path):
             # 发送文件供下载
             try:
+                # 验证文件路径安全性
+                validate_file_path(file_path)
+                
                 # 对中文文件名进行url编码，确保HTTP响应头正确
                 encoded_filename = urllib.parse.quote(original_filename)
                 
@@ -718,13 +730,13 @@ def download_file():
                         'Content-Length': str(os.path.getsize(file_path))
                     }
                 )
-            except Exception as e:
+            except (ValueError, Exception) as e:
                 print(f"下载文件时出错: {e}")
                 # 记录失败尝试
                 is_blocked = update_failed_attempts(client_ip, 'download_file')
                 if is_blocked:
                     return abort(403, description='您的IP已被临时限制访问，请5分钟后再试')
-                return jsonify({'success': False, 'message': '下载文件时出错'})
+                return jsonify({'success': False, 'message': '文件路径不安全或下载出错'})
         else:
             # 文件不存在，清理记录
             del file_data[new_code]
