@@ -153,6 +153,45 @@ def generate_code():
         if code not in file_data:
             return code
 
+# 生成随机20位数字文件名
+def generate_random_filename():
+    return ''.join(random.choices(string.digits, k=20))
+
+# 安全地获取文件扩展名
+def get_safe_extension(filename):
+    if '.' in filename:
+        ext = filename.rsplit('.', 1)[1].lower()
+        # 只允许字母和数字的扩展名，防止路径遍历
+        if ext.isalnum():
+            return ext
+    return ''
+
+# 验证文件路径安全性，防止路径遍历攻击
+def validate_file_path(file_path):
+    """
+    验证文件路径是否安全，防止路径遍历攻击
+    """
+    # 确保路径在指定的上传目录内
+    upload_dir = os.path.abspath(UPLOAD_FOLDER)
+    file_abs_path = os.path.abspath(file_path)
+    
+    # 检查文件路径是否在上传目录内
+    if not file_abs_path.startswith(upload_dir):
+        raise ValueError(f"文件路径不安全: {file_path}")
+    
+    # 检查路径中是否包含危险的字符或路径遍历序列
+    dangerous_patterns = ['..', '~', '/', '\\']
+    for pattern in dangerous_patterns:
+        if pattern in file_path:
+            raise ValueError(f"文件路径包含危险字符: {file_path}")
+    
+    # 检查文件名是否只包含安全字符（数字）
+    filename = os.path.basename(file_path)
+    if not filename.isdigit():
+        raise ValueError(f"文件名不安全: {filename}")
+    
+    return True
+
 # 检查文件是否过期
 def check_expired_files():
     file_data = read_file_data()
@@ -347,9 +386,12 @@ def upload_file():
         # 生成取件码
         code = generate_code()
         
-        # 保存文件
-        filename = f'{code}_{file.filename}'
-        file_path = os.path.join(UPLOAD_FOLDER, filename)
+        # 生成随机文件名并获取安全扩展名
+        random_filename = generate_random_filename()
+        file_extension = get_safe_extension(file.filename)
+        
+        # 保存文件（使用随机文件名，不包含扩展名）
+        file_path = os.path.join(UPLOAD_FOLDER, random_filename)
         file.save(file_path)
         
         # 计算过期时间
@@ -360,6 +402,8 @@ def upload_file():
         file_data[code] = {
             'file_path': file_path,
             'original_filename': file.filename,
+            'random_filename': random_filename,
+            'extension': file_extension,
             'upload_time': datetime.now().timestamp(),
             'expire_time': expire_time,
             'expire_hours': expire_hours,
@@ -726,20 +770,8 @@ def update_code_and_expiry():
             del file_data[old_code]
             file_data[new_code] = file_info
             
-            # 重命名文件
-            if os.path.exists(file_info['file_path']):
-                try:
-                    new_file_path = file_info['file_path'].replace(old_code, new_code, 1)
-                    os.rename(file_info['file_path'], new_file_path)
-                    file_info['file_path'] = new_file_path
-                    file_data[new_code] = file_info
-                    save_file_data(file_data)
-                except Exception as e:
-                    print(f"重命名文件时出错: {e}")
-                    # 即使重命名失败，也要更新数据库
-                    save_file_data(file_data)
-            else:
-                save_file_data(file_data)
+            # 直接更新数据库（不需要重命名为取件码+文件名的格式，因为使用了随机文件名）
+            save_file_data(file_data)
             
             return jsonify({'success': True, 'new_code': new_code})
         else:
