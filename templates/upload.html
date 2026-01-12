@@ -203,11 +203,11 @@
         
         // 页面加载时获取最大文件大小设置
         document.addEventListener('DOMContentLoaded', function() {
-            fetch('/read_admin_config')
+            fetch('/get_max_file_size')
                 .then(response => response.json())
-                .then(config => {
-                    if (config && config.max_file_size) {
-                        maxFileSizeMB = config.max_file_size;
+                .then(data => {
+                    if (data && data.max_file_size) {
+                        maxFileSizeMB = data.max_file_size;
                         document.getElementById('max-size-display').textContent = maxFileSizeMB;
                     }
                 })

@@ -120,7 +120,7 @@ def save_admin_config(config):
         json.dump(config, f, ensure_ascii=False, indent=4)
 
 # 获取当前最大文件大小（MB）
-def get_max_file_size():
+def get_current_max_file_size():
     config = read_admin_config()
     if config and 'max_file_size' in config:
         return config['max_file_size']
@@ -362,7 +362,7 @@ def upload_file():
         return redirect(url_for('initialize'))
     
     # 获取当前最大文件大小
-    max_file_size_mb = get_max_file_size()
+    max_file_size_mb = get_current_max_file_size()
     max_file_size_bytes = max_file_size_mb * 1024 * 1024
     
     if request.method == 'POST':
@@ -791,11 +791,12 @@ def update_code_and_expiry():
     else:
         return jsonify({'success': False, 'message': '参数错误'})
 
-# 获取管理员配置
-@app.route('/read_admin_config', methods=['GET'])
-def read_admin_config_route():
+# 获取文件大小限制
+@app.route('/get_max_file_size', methods=['GET'])
+def get_max_file_size():
     config = read_admin_config()
-    return jsonify(config)
+    max_file_size = config.get('max_file_size', DEFAULT_MAX_FILE_SIZE_MB)
+    return jsonify({'max_file_size': max_file_size})
 
 # 获取公告内容
 @app.route('/get_announcement', methods=['GET'])
