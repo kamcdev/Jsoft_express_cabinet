@@ -6,9 +6,6 @@ Werkzeug==3.0.3
 itsdangerous==2.1.2
 six==1.16.0
 click==8.1.7
-<<<<<<< HEAD
 Pillow==10.4.0
 requests==2.31.0
-=======
 Pillow==10.4.0
->>>>>>> c610b72b105e1550f4757d58940840628c6aed53
