@@ -161,6 +161,38 @@ body {
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
 
+/* GitHub按钮样式 */
+.github-btn {
+    position: absolute;
+    top: 30px;
+    right: 120px;
+    background-color: #333;
+    color: white;
+    text-align: center;
+    line-height: 40px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    z-index: 1000;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.github-btn:hover {
+    background-color: #444;
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+}
+
+.github-btn svg {
+    vertical-align: middle;
+}
+
 /* 存放文件按钮样式 */
 .store-btn {
     position: absolute;
@@ -184,6 +216,34 @@ body {
     background-color: #1976D2;
     transform: translateY(-2px);
     box-shadow: 0 5px 15px rgba(33, 150, 243, 0.3);
+}
+
+div[kid="copyright"] {
+    background-color: #ffffff00; 
+    color: rgba(255, 255, 255, 0.336); 
+    display: flex; 
+    justify-content: flex-end; 
+    align-items: center; 
+    font-size: 12px;
+    position: absolute;
+    bottom: 20px;
+    right: 20px;
+    gap: 8px;
+    padding: 10px;
+    z-index: 1000;
+}
+
+a[kid="pd"] {
+    color: rgba(255, 255, 255, 0.336); /* 设置颜色为 rgba(255, 255, 255, 0.336) */
+    text-decoration: none; /* 鼠标未悬停时不显示下划线 */
+}
+
+a[kid="pd"]:hover {
+    text-decoration: underline; /* 鼠标悬停时显示下划线 */
+}
+
+h4[class="nul"] {
+    color: #ffffff00;
 }
 
 /* 响应式设计 - 小屏幕手机 */
@@ -221,6 +281,20 @@ body {
         height: 50px;
         font-size: 24px;
         letter-spacing: 10px;
+    }
+    
+    .github-btn {
+        top: 20px;
+        right: 90px;
+        line-height: 36px;
+        font-size: 12px;
+        padding: 0 10px;
+        gap: 6px;
+    }
+    
+    .github-btn svg {
+        width: 14px;
+        height: 14px;
     }
     
     .store-btn {
@@ -267,6 +341,13 @@ body {
         font-size: 28px;
     }
     
+    .github-btn {
+        top: 30px;
+        right: 140px;
+        line-height: 45px;
+        font-size: 16px;
+    }
+    
     .store-btn {
         top: 30px;
         right: 30px;
@@ -286,6 +367,10 @@ body {
     .number-btn, .delete-btn, .confirm-btn {
         width: 85px;
         height: 85px;
+    }
+    
+    .github-btn {
+        right: 150px;
     }
 }
 
