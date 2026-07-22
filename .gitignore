@@ -1,0 +1,5 @@
+.backup/
+js/all/
+venv/
+.vscode/
+.trae/
